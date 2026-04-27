@@ -27,13 +27,19 @@ const Tip = ({ active, payload, label }) => {
 
 export default function HeatDaysChart({ data, threshold }) {
   const enriched = withMovingAvg(data);
+  const earlyYears = enriched.slice(0, 10);
+  const recentYears = enriched.slice(-10);
+  const avg = (arr) => arr.reduce((sum, item) => sum + item.extremeDays, 0) / Math.max(arr.length, 1);
+  const earlyAvg = avg(earlyYears);
+  const recentAvg = avg(recentYears);
+  const change = Number((recentAvg - earlyAvg).toFixed(1));
 
   return (
     <div className="chart-card">
       <div className="chart-header">
         <h3 className="chart-title">Extreme Heat Days / Year</h3>
         <p className="chart-subtitle">
-          Days exceeding 90th-pct baseline ({threshold}°C) — orange line = 10-yr trend
+          Days exceeding 90th-pct baseline ({threshold}°C), orange line = 10 year trend
         </p>
       </div>
       <ResponsiveContainer width="100%" height={230}>
@@ -77,6 +83,9 @@ export default function HeatDaysChart({ data, threshold }) {
           />
         </ComposedChart>
       </ResponsiveContainer>
+        <p className="chart-interpretation">
+        Interpretation: Recent decades are averaging {change >= 0 ? '+' : ''}{change} more extreme heat days per year than the earliest decade in this record, signaling stronger heat persistence.
+      </p>
     </div>
   );
 }

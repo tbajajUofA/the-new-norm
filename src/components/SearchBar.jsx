@@ -42,6 +42,13 @@ export default function SearchBar({ onCitySelect }) {
     onCitySelect(city);
   };
 
+  const handleKeyDown = e => {
+    if (e.key !== 'Enter') return;
+    if (!results.length) return;
+    e.preventDefault();
+    handleSelect(results[0]);
+  };
+
   return (
     <div className="search-container" ref={wrapperRef}>
       <div className="search-wrapper">
@@ -53,6 +60,7 @@ export default function SearchBar({ onCitySelect }) {
           value={query}
           onChange={e => setQuery(e.target.value)}
           onFocus={() => results.length > 0 && setOpen(true)}
+          onKeyDown={handleKeyDown}
           placeholder="Search any city on Earth…"
           className="search-input"
           autoComplete="off"

@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+backend/ml/saved_model/model.pt
+backend/ml/saved_model/scaler.pkl
+__pycache__/
+*.pyc
+.env
+.pytest_cache/
+backend/.venv/

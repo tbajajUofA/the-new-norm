@@ -1,5 +1,7 @@
 import AnomalyChart from './AnomalyChart';
 import HeatDaysChart from './HeatDaysChart';
+import AnomalyTrendChart from './AnomalyTrendChart';
+import DecadeHeatmap from './DecadeHeatmap';
 
 export default function ClimatePanel({ city, climateData, loading, error }) {
   if (loading) {
@@ -12,7 +14,7 @@ export default function ClimatePanel({ city, climateData, loading, error }) {
   }
 
   if (error) {
-    return <div className="panel-error">⚠ {error}</div>;
+    return <div className="panel-error">Error: {error}</div>;
   }
 
   if (!climateData || !city) return null;
@@ -29,7 +31,7 @@ export default function ClimatePanel({ city, climateData, loading, error }) {
   // Build insight sentence
   const insightParts = [];
   if (recentAnomaly >= 0.5)
-    insightParts.push(`<strong>${city.name}</strong> has averaged <strong>${anomalySign}${recentAnomaly}°C</strong> above the 1951–1980 baseline over the past decade`);
+    insightParts.push(`<strong>${city.name}</strong> has averaged <strong>${anomalySign}${recentAnomaly}°C</strong> above the 1951 to 1980 baseline over the past decade`);
   if (extremeIncrease > 10)
     insightParts.push(`extreme heat days have increased by <strong>${extremeIncrease}%</strong> compared to the 1960s`);
   if (hottestYear >= 2010)
@@ -50,7 +52,7 @@ export default function ClimatePanel({ city, climateData, loading, error }) {
             {Math.abs(city.longitude).toFixed(2)}°{city.longitude >= 0 ? 'E' : 'W'}
           </p>
           <p className="panel-baseline">
-            Baseline avg: {baselineAvg}°C (1951–1980)
+            Baseline avg: {baselineAvg}°C (1951 to 1980)
           </p>
         </div>
       </div>
@@ -61,7 +63,7 @@ export default function ClimatePanel({ city, climateData, loading, error }) {
           <span className={`stat-value ${recentAnomaly > 0.5 ? 'hot' : recentAnomaly > 0 ? 'warm' : 'cool'}`}>
             {anomalySign}{recentAnomaly}°C
           </span>
-          <span className="stat-label">Avg anomaly 2015–2024 vs baseline</span>
+          <span className="stat-label">Avg anomaly 2015 to 2024 vs baseline</span>
         </div>
         <div className="stat-card">
           <span className="stat-value hot">{hottestYear}</span>
@@ -85,13 +87,15 @@ export default function ClimatePanel({ city, climateData, loading, error }) {
       <div className="charts-grid">
         <AnomalyChart data={anomalyData} />
         <HeatDaysChart data={anomalyData} threshold={extremeThreshold} />
+        <AnomalyTrendChart data={anomalyData} />
+        <DecadeHeatmap data={anomalyData} />
       </div>
 
       {/* Insight bar */}
       {insight && (
         <div
           className="insight-bar"
-          dangerouslySetInnerHTML={{ __html: `📊 ${insight}.` }}
+          dangerouslySetInnerHTML={{ __html: `${insight}.` }}
         />
       )}
     </div>

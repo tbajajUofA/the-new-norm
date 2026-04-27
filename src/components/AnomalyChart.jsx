@@ -9,7 +9,7 @@ const Tip = ({ active, payload, label }) => {
   return (
     <div className="chart-tooltip">
       <p className="tooltip-year">{label}</p>
-      <p className="tooltip-value" style={{ color: v >= 0 ? '#ef4444' : '#60a5fa' }}>
+      <p className="tooltip-value" style={{ color: v >= 0 ? '#ef4444' : '#94a3b8' }}>
         {v >= 0 ? '+' : ''}{v}°C
       </p>
     </div>
@@ -17,12 +17,17 @@ const Tip = ({ active, payload, label }) => {
 };
 
 export default function AnomalyChart({ data }) {
+  const latest = data[data.length - 1];
+  const first = data[0];
+  const delta = Number((latest.anomaly - first.anomaly).toFixed(2));
+  const direction = delta >= 0 ? 'upward' : 'downward';
+
   return (
     <div className="chart-card">
       <div className="chart-header">
         <h3 className="chart-title">Temperature Anomaly</h3>
         <p className="chart-subtitle">
-          Annual deviation from 1951–1980 baseline (°C) — red = warmer, blue = cooler
+          Annual deviation from 1951 to 1980 baseline (°C), red = warmer, muted tones = cooler
         </p>
       </div>
       <ResponsiveContainer width="100%" height={230}>
@@ -51,13 +56,17 @@ export default function AnomalyChart({ data }) {
                   key={i}
                   fill={d.anomaly >= 0
                     ? `rgba(239,68,68,${intensity})`
-                    : `rgba(96,165,250,${intensity})`}
+                    : `rgba(148,163,184,${Math.max(intensity - 0.2, 0.22)})`}
                 />
               );
             })}
           </Bar>
         </BarChart>
       </ResponsiveContainer>
+      <p className="chart-interpretation">
+        Interpretation: From {first.year} to {latest.year}, anomaly shifted {delta >= 0 ? '+' : ''}
+        {delta}°C, indicating a long-term {direction} drift relative to the baseline.
+      </p>
     </div>
   );
 }
