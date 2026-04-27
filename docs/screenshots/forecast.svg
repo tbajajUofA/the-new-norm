@@ -1,0 +1,9 @@
+<svg xmlns='http://www.w3.org/2000/svg' width='900' height='300' viewBox='0 0 900 300'>
+  <rect width='100%' height='100%' fill='#120405' />
+  <text x='24' y='28' fill='#ff2d95' font-family='Syne' font-size='20'>14-Day Forecast</text>
+  <g transform='translate(24,48)'>
+    <rect x='0' y='0' width='840' height='200' rx='10' fill='#1f0a0d' stroke='#3b0a12' />
+    <path d='M20 140 C100 120, 200 130, 300 120 C400 110, 500 120, 600 115 C700 110, 800 118, 820 116' fill='none' stroke='#ef4444' stroke-width='3' />
+    <circle cx='140' cy='120' r='6' fill='#ef4444' stroke='#fff' stroke-width='1.5'/>
+  </g>
+</svg>
