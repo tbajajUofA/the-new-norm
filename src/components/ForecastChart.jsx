@@ -157,13 +157,10 @@ export default function ForecastChart({ city, forecast, loading, error, metrics,
               dataKey="temp"
               stroke="#ef4444"
               strokeWidth={2}
-              dot={(props) => {
-                const { cx, cy, payload } = props;
-                if (payload?.index !== peakDay) return null;
-                return <circle cx={cx} cy={cy} r={6} fill="#ef4444" stroke="#fff" strokeWidth={1.5} />;
-              }}
+              dot={false}
               activeDot={{ r: 4 }}
             />
+            {/* Removed static peak marker to avoid a non-moving dot; activeDot on hover remains */}
           </ComposedChart>
         </ResponsiveContainer>
       </div>

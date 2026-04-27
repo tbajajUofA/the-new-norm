@@ -31,7 +31,7 @@ export default function ClimatePanel({ city, climateData, loading, error }) {
   // Build insight sentence
   const insightParts = [];
   if (recentAnomaly >= 0.5)
-    insightParts.push(`<strong>${city.name}</strong> has averaged <strong>${anomalySign}${recentAnomaly}°C</strong> above the 1951 to 1980 baseline over the past decade`);
+    insightParts.push(`<strong class="insight-city">${city.name}</strong> has averaged <strong class="insight-number">${anomalySign}${recentAnomaly}°C</strong> above the 1951 to 1980 baseline (the 30-year historical average used as the reference period) over the past decade`);
   if (extremeIncrease > 10)
     insightParts.push(`extreme heat days have increased by <strong>${extremeIncrease}%</strong> compared to the 1960s`);
   if (hottestYear >= 2010)
