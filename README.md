@@ -1,9 +1,15 @@
-# The New Normal | Tech Builder Program Hackathon 2026 Submission
+# The New Normal | Hackspire Hackathon 2026 Submission
 
 Description
 -----------------
 The New Normal is an interactive, city-focused climate evidence tool that turns raw historical weather data into simple, personal answers.
  Is your city hotter than it used to be? It uses the Open‑Meteo archive to compute year-by-year temperature anomalies against the 1951–1980 scientific baseline and visualizes the results with clear charts and a live 3D globe.
+
+
+Demo
+-----------
+https://github.com/user-attachments/assets/5731bb27-4896-4c3a-a55f-ffd4615cc486
+
 
 Screenshots
 -----------
@@ -78,13 +84,13 @@ APIs used
 
 Visualizations (components)
 ---------------------------
-- `SearchBar` — city lookup with autocomplete and quick navigation.
-- `Globe` — interactive 3D globe that flies to the selected city for spatial context.
-- `AnomalyChart` — per-year temperature anomaly bars (1950–2024 vs 1951–1980 baseline).
-- `AnomalyTrendChart` — trend lines and moving averages highlighting long-term warming.
-- `DecadeHeatmap` — seasonal/decadal heatmap view for monthly/seasonal patterns.
-- `HeatDaysChart` — extreme heat days per year with a 10-year moving average to show persistent changes.
-- `ForecastChart` — 14-day forecast produced by the Transformer model (or fallback) for short-term local outlooks.
+- `SearchBar` | city lookup with autocomplete and quick navigation.
+- `Globe` | interactive 3D globe that flies to the selected city for spatial context.
+- `AnomalyChart` | per-year temperature anomaly bars (1950–2024 vs 1951–1980 baseline).
+- `AnomalyTrendChart` | trend lines and moving averages highlighting long-term warming.
+- `DecadeHeatmap` | seasonal/decadal heatmap view for monthly/seasonal patterns.
+- `HeatDaysChart` | extreme heat days per year with a 10-year moving average to show persistent changes.
+- `ForecastChart` | 14-day forecast produced by the Transformer model (or fallback) for short-term local outlooks.
 
 Modeling choices
 ----------------
