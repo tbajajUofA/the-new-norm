@@ -1,8 +1,0 @@
-<svg xmlns='http://www.w3.org/2000/svg' width='900' height='120' viewBox='0 0 900 120'>
-  <rect width='100%' height='100%' fill='#120405' />
-  <rect x='20' y='16' width='860' height='64' rx='8' fill='rgba(255,45,149,0.14)' stroke='rgba(255,45,149,0.45)' />
-  <text x='44' y='54' fill='#ff2d95' font-family='IBM Plex Mono' font-size='20' font-weight='800'>Edmonton</text>
-  <text x='160' y='56' fill='#ffe6f3' font-family='IBM Plex Mono' font-size='18'>has averaged</text>
-  <rect x='320' y='36' width='92' height='28' rx='6' fill='#ff2d95'/>
-  <text x='338' y='58' fill='#fff' font-family='IBM Plex Mono' font-size='16' font-weight='800'>+0.95°C</text>
-</svg>
