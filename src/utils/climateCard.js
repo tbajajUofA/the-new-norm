@@ -24,8 +24,8 @@ function drawStat(ctx, x, y, value, label, color) {
   ctx.fillText(label, x, y + 36);
 }
 
-function drawSparkline(ctx, series, x, y, width, height) {
-  if (!series || series.length === 0) {
+function drawAnomalyChart(ctx, series, x, y, width, height) {
+  if (!series || series.length < 2) {
     return;
   }
 
@@ -46,9 +46,13 @@ function drawSparkline(ctx, series, x, y, width, height) {
   ctx.stroke();
   ctx.setLineDash([]);
 
+  ctx.fillStyle = 'rgba(255,255,255,0.45)';
+  ctx.font = '16px "IBM Plex Mono", monospace';
+  ctx.fillText('1.5C', x + width - 52, thresholdY - 8);
+
   const gradient = ctx.createLinearGradient(0, y, 0, y + height);
-  gradient.addColorStop(0, 'rgba(224, 90, 90, 0.3)');
-  gradient.addColorStop(1, 'rgba(224, 90, 90, 0)');
+  gradient.addColorStop(0, 'rgba(239, 68, 68, 0.34)');
+  gradient.addColorStop(1, 'rgba(239, 68, 68, 0)');
   ctx.fillStyle = gradient;
   ctx.beginPath();
   ctx.moveTo(toCanvasX(0), y + height);
@@ -59,7 +63,7 @@ function drawSparkline(ctx, series, x, y, width, height) {
   ctx.closePath();
   ctx.fill();
 
-  ctx.strokeStyle = '#e05a5a';
+  ctx.strokeStyle = '#ef4444';
   ctx.lineWidth = 2.5;
   ctx.lineJoin = 'round';
   ctx.beginPath();
@@ -72,12 +76,74 @@ function drawSparkline(ctx, series, x, y, width, height) {
   });
   ctx.stroke();
 
-  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.strokeStyle = 'rgba(255,255,255,0.14)';
   ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.moveTo(x, toCanvasY(0));
   ctx.lineTo(x + width, toCanvasY(0));
   ctx.stroke();
+}
+
+function drawExtremeHeatBars(ctx, series, x, y, width, height) {
+  if (!series || series.length < 2) {
+    return;
+  }
+
+  const bars = series.slice(-14);
+  const barMax = Math.max(...bars, 1);
+  const spacing = width / bars.length;
+  const barWidth = Math.max(3, spacing * 0.6);
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.14)';
+  ctx.beginPath();
+  ctx.moveTo(x, y + height);
+  ctx.lineTo(x + width, y + height);
+  ctx.stroke();
+
+  bars.forEach((value, index) => {
+    const barHeight = (value / barMax) * (height - 8);
+    const bx = x + index * spacing + (spacing - barWidth) / 2;
+    const by = y + height - barHeight;
+    const barGradient = ctx.createLinearGradient(0, by, 0, y + height);
+    barGradient.addColorStop(0, 'rgba(239, 68, 68, 0.9)');
+    barGradient.addColorStop(1, 'rgba(239, 68, 68, 0.28)');
+    ctx.fillStyle = barGradient;
+    roundRect(ctx, bx, by, barWidth, barHeight, 2);
+    ctx.fill();
+  });
+}
+
+function drawLocationGlobe(ctx, centerX, centerY, radius, latitude, longitude) {
+  const globeGradient = ctx.createRadialGradient(centerX - 16, centerY - 18, 4, centerX, centerY, radius + 6);
+  globeGradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+  globeGradient.addColorStop(1, 'rgba(239, 68, 68, 0.15)');
+  ctx.fillStyle = globeGradient;
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+  ctx.beginPath();
+  ctx.moveTo(centerX - radius, centerY);
+  ctx.lineTo(centerX + radius, centerY);
+  ctx.moveTo(centerX, centerY - radius);
+  ctx.lineTo(centerX, centerY + radius);
+  ctx.stroke();
+
+  if (typeof latitude === 'number' && typeof longitude === 'number') {
+    const markerX = centerX + (longitude / 180) * radius * 0.88;
+    const markerY = centerY - (latitude / 90) * radius * 0.88;
+    ctx.fillStyle = '#ef4444';
+    ctx.beginPath();
+    ctx.arc(markerX, markerY, 4.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
 export async function generateClimateCard({
@@ -88,6 +154,11 @@ export async function generateClimateCard({
   regime,
   regimeEmoji,
   anomalySeries,
+  extremeDaysSeries = [],
+  extremeIncrease = null,
+  currentExtremeDays = null,
+  latitude = null,
+  longitude = null,
 }) {
   const width = 1080;
   const height = 1080;
@@ -101,8 +172,8 @@ export async function generateClimateCard({
   }
 
   const background = ctx.createLinearGradient(0, 0, width, height);
-  background.addColorStop(0, '#0d0d0d');
-  background.addColorStop(1, '#1a0a0a');
+  background.addColorStop(0, '#16040f');
+  background.addColorStop(1, '#250814');
   ctx.fillStyle = background;
   ctx.fillRect(0, 0, width, height);
 
@@ -113,15 +184,12 @@ export async function generateClimateCard({
     ctx.fillRect(x, y, 1, 1);
   }
 
-  const accent = ctx.createLinearGradient(0, 0, width, 0);
-  accent.addColorStop(0, '#e05a5a');
-  accent.addColorStop(1, '#ff9a5a');
-  ctx.fillStyle = accent;
+  ctx.fillStyle = '#ef4444';
   ctx.fillRect(0, 0, width, 6);
 
   ctx.fillStyle = 'rgba(255,255,255,0.35)';
   ctx.font = '500 28px "IBM Plex Mono", monospace';
-  ctx.fillText('THE NEW NORM', 60, 80);
+  ctx.fillText('THE NEW NORMAL · CITY CLIMATE SNAPSHOT', 60, 80);
 
   ctx.fillStyle = '#ffffff';
   ctx.font = 'bold 110px Georgia, serif';
@@ -131,6 +199,8 @@ export async function generateClimateCard({
   ctx.font = '400 36px Georgia, serif';
   ctx.fillText(country || '', 60, 285);
 
+  drawLocationGlobe(ctx, width - 130, 124, 48, latitude, longitude);
+
   ctx.strokeStyle = 'rgba(255,255,255,0.12)';
   ctx.lineWidth = 1;
   ctx.beginPath();
@@ -139,8 +209,8 @@ export async function generateClimateCard({
   ctx.stroke();
 
   const regimeColors = {
-    tipping: '#e05a5a',
-    accelerating: '#e0a05a',
+    tipping: '#ef4444',
+    accelerating: '#f97316',
     stable: '#5ae07a',
   };
   const badgeColor = regimeColors[regime] || '#888888';
@@ -157,23 +227,28 @@ export async function generateClimateCard({
   ctx.font = 'bold 26px "IBM Plex Mono", monospace';
   ctx.fillText(`${regimeEmoji || ''} ${String(regime || '').toUpperCase()}`.trim(), 82, 383);
 
-  drawStat(ctx, 60, 460, `${currentAnomaly >= 0 ? '+' : ''}${Number(currentAnomaly).toFixed(2)}°C`, 'CURRENT ANOMALY', '#e05a5a');
-  drawStat(ctx, 400, 460, crossingYear ? String(crossingYear) : '> 2100', 'CROSSES 1.5°C', '#ff9a5a');
+  drawStat(ctx, 60, 460, `${currentAnomaly >= 0 ? '+' : ''}${Number(currentAnomaly).toFixed(2)}°C`, 'CURRENT ANOMALY', '#ef4444');
+  drawStat(ctx, 400, 460, crossingYear ? String(crossingYear) : '> 2100', 'CROSSES 1.5C', '#f97316');
 
-  drawSparkline(ctx, anomalySeries, 60, 620, width - 120, 280);
+  const increaseText = typeof extremeIncrease === 'number' ? `${extremeIncrease >= 0 ? '+' : ''}${extremeIncrease}%` : 'n/a';
+  drawStat(ctx, 720, 460, increaseText, 'EXTREME HEAT VS BASELINE', '#f59e0b');
+
+  ctx.fillStyle = 'rgba(255,255,255,0.45)';
+  ctx.font = '600 22px "IBM Plex Mono", monospace';
+  ctx.fillText('ANOMALY TREND', 60, 560);
+  ctx.fillText('EXTREME HEAT DAYS', 60, 820);
+
+  drawAnomalyChart(ctx, anomalySeries, 60, 585, width - 120, 190);
+  drawExtremeHeatBars(ctx, extremeDaysSeries, 60, 840, width - 120, 120);
 
   ctx.fillStyle = 'rgba(255,255,255,0.3)';
-  ctx.font = '22px "IBM Plex Mono", monospace';
-  ctx.fillText('1950', 60, 935);
-  ctx.fillText('2024', width - 120, 935);
-
-  ctx.fillStyle = 'rgba(224, 90, 90, 0.6)';
-  ctx.font = '20px "IBM Plex Mono", monospace';
-  ctx.fillText('— 1.5°C Paris threshold', width - 420, 935);
+  ctx.font = '18px "IBM Plex Mono", monospace';
+  ctx.fillText('Recent years', 60, 992);
+  ctx.fillText(`Current extreme days: ${currentExtremeDays ?? 'n/a'}`, width - 390, 992);
 
   ctx.fillStyle = 'rgba(255,255,255,0.2)';
-  ctx.font = '22px "IBM Plex Mono", monospace';
-  ctx.fillText('Forecast powered by Amazon Chronos · The New Normal', 60, 1020);
+  ctx.font = '18px "IBM Plex Mono", monospace';
+  ctx.fillText('Chronos AI climate outlook · Model: amazon/chronos-t5-large', 60, 1038);
 
   return canvas.toDataURL('image/png');
 }

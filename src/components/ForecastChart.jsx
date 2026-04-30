@@ -1,5 +1,4 @@
 import {
-  Area,
   ComposedChart,
   Line,
   ReferenceArea,
@@ -25,11 +24,6 @@ function formatAnomaly(value) {
   return `${numericValue >= 0 ? '+' : ''}${numericValue.toFixed(2)}°C`;
 }
 
-function formatForecastValue(value) {
-  const numericValue = toNumber(value);
-  return numericValue == null ? 'n/a' : `${numericValue.toFixed(2)}°C`;
-}
-
   export default function ForecastChart({
     city,
     forecast,
@@ -45,7 +39,7 @@ function formatForecastValue(value) {
 
   if (loading) {
       const pct = Math.max(0, Math.min(100, Number(loadingProgress?.pct ?? 0)));
-      const label = loadingProgress?.label || 'Loading forecast...';
+      const label = loadingProgress?.label || 'AI-powered forecast in process.';
 
     return (
         <div className="panel-loading forecast-loading-panel">
@@ -56,7 +50,7 @@ function formatForecastValue(value) {
               <div className="loader-fill" style={{ width: `${pct}%` }} />
             </div>
             <div className="loader-row">
-              <span className="loader-label">Chronos progress</span>
+              <span className="loader-label">AI-powered forecast in process</span>
               <span className="loader-pct">{pct}%</span>
             </div>
           </div>
@@ -71,8 +65,7 @@ function formatForecastValue(value) {
     const anomalySeries = climateData?.anomalyData ?? [];
     const crossing = forecast?.crossing ?? null;
     const regime = forecast?.regime ?? {};
-    const forecast5 = forecast?.forecast5 ?? null;
-    const hasForecast = Boolean(crossing && forecast5 && anomalySeries.length > 0);
+    const hasForecast = Boolean(crossing && anomalySeries.length > 0);
 
     if (!hasForecast) {
       return (
@@ -117,32 +110,6 @@ function formatForecastValue(value) {
     const chartData = [...chartMap.values()].sort((a, b) => a.year - b.year);
     const forecastBands = chartData.filter((point) => point.forecastLow != null && point.forecastHigh != null);
 
-    const forecast5Years = forecast5.years || [];
-    const forecast5Data = new Map();
-
-    historicalSlice.forEach((point) => {
-      forecast5Data.set(point.year, {
-        year: point.year,
-        observed: point.anomaly,
-        projectedMedian: null,
-        projectedLow: null,
-        projectedHigh: null,
-      });
-    });
-
-    forecast5Years.forEach((year, index) => {
-      const existing = forecast5Data.get(year) || { year, observed: null };
-      forecast5Data.set(year, {
-        ...existing,
-        projectedMedian: toNumber(forecast5.median?.[index]),
-        projectedLow: toNumber(forecast5.low?.[index]),
-        projectedHigh: toNumber(forecast5.high?.[index]),
-      });
-    });
-
-    const forecast5ChartData = [...forecast5Data.values()].sort((a, b) => a.year - b.year);
-    const forecast5BandYears = forecast5ChartData.filter((point) => point.projectedLow != null && point.projectedHigh != null);
-
     const handleShare = async () => {
       if (!anomalySeries.length) return;
 
@@ -156,6 +123,11 @@ function formatForecastValue(value) {
           regime: regime.regime,
           regimeEmoji: regime.emoji,
           anomalySeries: anomalySeries.map((item) => Number(item.anomaly)),
+          extremeDaysSeries: anomalySeries.map((item) => Number(item.extremeDays ?? 0)),
+          extremeIncrease: climateData?.stats?.extremeIncrease ?? null,
+          currentExtremeDays: climateData?.stats?.currentExtreme ?? null,
+          latitude: city.latitude ?? null,
+          longitude: city.longitude ?? null,
         });
 
         const response = await fetch(imageData);
@@ -178,33 +150,37 @@ function formatForecastValue(value) {
     <div className="climate-panel">
       <div className="forecast-header-row">
         <div>
-          <h3 className="chart-title">Chronos Climate Outlook</h3>
+          <h3 className="chart-title">Chronos AI Climate Outlook</h3>
           <p className="chart-subtitle">Annual anomaly forecast from the historical climate series.</p>
             <p className="forecast-meta">{city.name}{city.country ? `, ${city.country}` : ''}</p>
         </div>
           <div className="forecast-actions">
-            {regime.label && (
-              <span className={`status-badge ${regime.regime || 'stable'}`}>
-                {regime.emoji ? `${regime.emoji} ` : ''}{regime.label}
-              </span>
-            )}
             <button className="share-btn" type="button" onClick={handleShare}>
               {shareState === 'building' ? 'Building card...' : shareState === 'done' ? 'Card saved' : 'Share climate card'}
             </button>
           </div>
       </div>
-      <p className="chart-interpretation">{crossingLabel}</p>
-      <p className="chart-interpretation">{interpretation}</p>
+      <div className="outlook-keyline">
+        <p className="chart-interpretation primary">{crossingLabel}</p>
+        {regime.label && (
+          <span className={`status-badge ${regime.regime || 'stable'} inline-pill`}>
+            {regime.emoji ? `${regime.emoji} ` : ''}{regime.label}
+          </span>
+        )}
+      </div>
+      <p className="chart-interpretation regime-line">{interpretation}</p>
 
-      <div className="model-explainer">
-        <h4>How Chronos works</h4>
-        <p>
-          Chronos reads the city&apos;s yearly anomaly history and forecasts the next 76 years of warming.
-          The band shows uncertainty, the median line shows the central estimate, and the 1.5°C threshold marks the Paris target.
-        </p>
+      <div className="paris-threshold-help" role="note" aria-label="Paris threshold explanation">
+        <span>Paris threshold</span>
+        <button type="button" className="paris-tooltip-trigger" aria-label="What is the Paris threshold?">
+          ?
+          <span className="paris-tooltip-content">
+            1.5°C is the Paris Agreement warming limit above pre-industrial levels, used as a critical climate risk guardrail.
+          </span>
+        </button>
       </div>
 
-      <div style={{ width: '100%', height: 300 }}>
+      <div style={{ width: '100%', height: 420 }}>
         <ResponsiveContainer>
           <ComposedChart data={chartData} margin={{ top: 8, right: 32, bottom: 20, left: 0 }}>
             <XAxis
@@ -268,6 +244,18 @@ function formatForecastValue(value) {
 
       <p className="chart-subtitle">Confidence band widens further out in time. Uncertainty increases with forecast distance.</p>
 
+      <div className="model-explainer compact">
+        <h4>How Chronos works</h4>
+        <p>
+          Chronos reads the city&apos;s yearly anomaly history and forecasts the next 76 years of warming.
+          The band shows uncertainty, the median line shows the central estimate, and the 1.5°C threshold marks the Paris target.
+          {' '}
+          <a href="https://huggingface.co/amazon/chronos-t5-large" target="_blank" rel="noreferrer" className="model-link">
+            Model: Amazon Chronos
+          </a>
+        </p>
+      </div>
+
       <div className="stats-row">
         <div className="stat-card">
           <div className="stat-label">Projected crossing year</div>
@@ -304,53 +292,6 @@ function formatForecastValue(value) {
         </div>
       )}
 
-      {forecast5ChartData.length > 1 && (
-        <div className="chart-card full-width outlook-card" style={{ marginTop: 18 }}>
-          <div className="chart-header">
-            <h3 className="chart-title">5-Year Climate Outlook</h3>
-            <p className="chart-subtitle">Chronos anchor plus the next five forecast years.</p>
-          </div>
-
-          <div style={{ width: '100%', height: 280 }}>
-            <ResponsiveContainer>
-              <ComposedChart data={forecast5ChartData} margin={{ top: 8, right: 18, bottom: 0, left: 0 }}>
-                <XAxis
-                  dataKey="year"
-                  tick={{ fill: '#f1f5f9', fontSize: 12, fontFamily: 'IBM Plex Mono, monospace' }}
-                  axisLine={{ stroke: 'rgba(255,255,255,0.06)' }}
-                  tickLine={false}
-                  type="number"
-                  domain={['dataMin', 'dataMax']}
-                  tickFormatter={(value) => String(value)}
-                />
-                <YAxis
-                  tick={{ fill: '#f1f5f9', fontSize: 12, fontFamily: 'IBM Plex Mono, monospace' }}
-                  axisLine={{ stroke: 'rgba(255,255,255,0.06)' }}
-                  tickLine={false}
-                  width={64}
-                  domain={['auto', 'auto']}
-                />
-                <Tooltip
-                  contentStyle={{ background: '#0f1724', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, fontFamily: 'IBM Plex Mono, monospace' }}
-                  formatter={(value, name) => [formatForecastValue(value), name === 'projectedMedian' ? 'Projected median' : 'Observed']}
-                  labelFormatter={(label) => `Year ${label}`}
-                />
-                <Line type="monotone" dataKey="observed" stroke="#fb7185" strokeWidth={2} dot={{ r: 3 }} isAnimationActive={false} />
-                <Area type="monotone" dataKey="observed" fill="rgba(251,113,133,0.08)" stroke="none" isAnimationActive={false} />
-                <Line type="monotone" dataKey="projectedLow" stroke="#fca5a5" strokeWidth={1.2} dot={false} strokeDasharray="4 4" isAnimationActive={false} />
-                <Line type="monotone" dataKey="projectedMedian" stroke="#f97316" strokeWidth={2.2} dot={{ r: 3 }} strokeDasharray="6 4" isAnimationActive={false} />
-                <Line type="monotone" dataKey="projectedHigh" stroke="#fca5a5" strokeWidth={1.2} dot={false} strokeDasharray="4 4" isAnimationActive={false} />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
-
-          {forecast5BandYears.length > 0 && (
-            <p className="chart-interpretation" style={{ marginTop: 10 }}>
-              The first point is the smoothed anchor that connects the historical series to the next five Chronos years.
-            </p>
-          )}
-        </div>
-      )}
     </div>
   );
 }
