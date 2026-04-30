@@ -77,11 +77,15 @@ function formatAnomaly(value) {
     }
 
     const crossingYear = crossing.crossingYear ?? null;
+    const futureCrossingYear = crossingYear && crossingYear > 2026 ? crossingYear : null;
+    const crossedByNow = crossingYear != null && crossingYear <= 2026;
     const currentAnomaly = toNumber(crossing.currentAnomaly) ?? anomalySeries.at(-1)?.anomaly ?? 0;
     const currentAnomalyLabel = formatAnomaly(currentAnomaly);
-    const crossingLabel = crossingYear
-      ? `${city.name} is projected to cross 1.5°C by ${crossingYear}.`
-      : `${city.name} does not cross 1.5°C by 2100 in the median forecast.`;
+    const crossingLabel = futureCrossingYear
+      ? `${city.name} is projected to cross 1.5°C by ${futureCrossingYear}.`
+      : crossedByNow
+        ? `${city.name} is already beyond the 1.5°C threshold as of 2026.`
+        : `${city.name} does not cross 1.5°C by 2100 in the median forecast.`;
     const interpretation = regime.summary || crossingLabel;
 
     const historicalSlice = anomalySeries.slice(Math.max(0, anomalySeries.length - 30));
@@ -259,7 +263,7 @@ function formatAnomaly(value) {
       <div className="stats-row">
         <div className="stat-card">
           <div className="stat-label">Projected crossing year</div>
-          <div className="stat-value hot">{crossingYear ?? 'Not reached'}</div>
+          <div className="stat-value hot">{futureCrossingYear ?? (crossedByNow ? 'Already crossed' : 'Not reached')}</div>
         </div>
         <div className="stat-card">
           <div className="stat-label">Current anomaly</div>
