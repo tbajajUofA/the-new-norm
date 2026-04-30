@@ -8,7 +8,9 @@ The New Normal is an interactive, city-focused climate evidence tool that turns 
 
 Demo
 -----------
-https://github.com/user-attachments/assets/5731bb27-4896-4c3a-a55f-ffd4615cc486
+
+
+https://github.com/user-attachments/assets/43f37a12-bd21-49af-a39d-5f7eb76908e4
 
 
 Screenshots
