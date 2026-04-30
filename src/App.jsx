@@ -14,8 +14,8 @@ export default function App() {
     loading: forecastLoading,
     error: forecastError,
     fetchForecast,
-    metrics,
     history,
+    loadingProgress,
   } = useForecast();
   const [minBootElapsed, setMinBootElapsed] = useState(false);
   const [globeReady, setGlobeReady] = useState(false);
@@ -33,7 +33,8 @@ export default function App() {
 
   useEffect(() => {
     if (minBootElapsed && globeReady) {
-      setHideBootScreen(true);
+      const hideTimer = setTimeout(() => setHideBootScreen(true), 0);
+      return () => clearTimeout(hideTimer);
     }
   }, [minBootElapsed, globeReady]);
 
@@ -42,9 +43,11 @@ export default function App() {
     dataSectionRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [climateData]);
 
-  const handleCitySelect = useCallback((city) => {
-    fetchClimateData(city);
-    fetchForecast(city.latitude, city.longitude, city.name);
+  const handleCitySelect = useCallback(async (city) => {
+    const processed = await fetchClimateData(city);
+    if (processed) {
+      await fetchForecast(processed, city);
+    }
   }, [fetchClimateData, fetchForecast]);
 
   return (
@@ -66,7 +69,7 @@ export default function App() {
         <div className="header-search">
           <SearchBar onCitySelect={handleCitySelect} />
         </div>
-        <p className="header-tagline">70+ years of climate data and ML forecast signals</p>
+        <p className="header-tagline">70+ years of climate data and Chronos climate signals</p>
       </header>
 
       {/* ── Globe ───────────────────────────────── */}
@@ -104,9 +107,9 @@ export default function App() {
           forecast={forecast}
           loading={forecastLoading}
           error={forecastError}
-          metrics={metrics}
           history={history}
           climateData={climateData}
+          loadingProgress={loadingProgress}
         />
       </section>
 

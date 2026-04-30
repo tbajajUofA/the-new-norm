@@ -29,3 +29,5 @@ __pycache__/
 .env
 .pytest_cache/
 backend/.venv/
+backend/venv/
+node_modules/

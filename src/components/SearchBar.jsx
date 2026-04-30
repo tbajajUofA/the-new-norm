@@ -12,8 +12,16 @@ export default function SearchBar({ onCitySelect }) {
 
   // Debounced geocoding
   useEffect(() => {
-    if (query.length < 2) { setResults([]); setOpen(false); return; }
     clearTimeout(debounce.current);
+
+    if (query.length < 2) {
+      const resetTimer = setTimeout(() => {
+        setResults([]);
+        setOpen(false);
+      }, 0);
+      return () => clearTimeout(resetTimer);
+    }
+
     debounce.current = setTimeout(async () => {
       setLoading(true);
       try {

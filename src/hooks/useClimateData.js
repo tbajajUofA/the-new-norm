@@ -35,8 +35,10 @@ export function useClimateData() {
       if (!json.daily) throw new Error('No climate data available for this location.');
       const processed = processClimateData(json.daily);
       setClimateData(processed);
+      return processed;
     } catch (err) {
       setError(err.message || 'Failed to load climate data.');
+      return null;
     } finally {
       setLoading(false);
     }

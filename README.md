@@ -25,9 +25,9 @@ Screenshots
 
 ![5 — Heat map](docs/screenshots/5_heat_map.png)
 
-![6 — Transformer 14-day forecast](docs/screenshots/6_transformer_14%20day%20forecast.png)
+![6 — Chronos climate outlook](docs/screenshots/6_transformer_14%20day%20forecast.png)
 
-![7 — Transformer results](docs/screenshots/7_transformer_results.png)
+![7 — Chronos results](docs/screenshots/7_transformer_results.png)
 
 ![8 — Five-year climate outlook](docs/screenshots/8_five_year%20climate_outlook.png)
 
@@ -46,7 +46,7 @@ Core features
 - Temperature anomaly bar chart (1950–2024 vs 1951–1980 baseline)
 - Extreme heat days per year with a 10-year moving average
 - Auto-generated plain-English insight summary for each city
-- 14-day local forecast (Transformer model) and a 5-year statistical outlook
+- Chronos-powered climate outlook: 1.5°C crossing year and warming regime classification
 
 Solution overview
 -----------------
@@ -70,7 +70,7 @@ Architecture & tech
 - Data: Open‑Meteo (historical and geocoding)
 
 
-Notes: model artifacts are expected in `backend/ml/saved_model/` if you want Transformer inference. The API returns 503 when artifacts are missing so it won't crash the server.
+Notes: the backend warms a CPU Chronos pipeline at startup and exposes `/api/climate/crossing` plus `/api/climate/regime`. No saved model artifacts are required.
 
 APIs, Visualizations, and Rationale
 -----------------------------------
@@ -79,22 +79,22 @@ APIs used
 ---------
 - **Open‑Meteo Geocoding API** — convert city names to latitude/longitude (autocomplete + lookup).
 - **Open‑Meteo Archive API** — historical daily temperature series used to compute baselines and yearly anomalies (1950–2024).
-- **Open‑Meteo Forecast API** — optional short-term observations/forecasts used to validate or seed the local Transformer where applicable.
-- **Local model inference** — an optional Transformer artifact stored under `backend/ml/saved_model/` for on-prem 14-day forecasts (see `/backend/ml`).
+- **Open‑Meteo Forecast API** — optional short-term observations/forecasts used for contextual climate exploration where applicable.
+- **Local model inference** — Chronos T5 small forecasts annual anomaly trajectories directly from the historical series.
 
 Visualizations (components)
 ---------------------------
-- `SearchBar` | city lookup with autocomplete and quick navigation.
-- `Globe` | interactive 3D globe that flies to the selected city for spatial context.
-- `AnomalyChart` | per-year temperature anomaly bars (1950–2024 vs 1951–1980 baseline).
-- `AnomalyTrendChart` | trend lines and moving averages highlighting long-term warming.
-- `DecadeHeatmap` | seasonal/decadal heatmap view for monthly/seasonal patterns.
-- `HeatDaysChart` | extreme heat days per year with a 10-year moving average to show persistent changes.
-- `ForecastChart` | 14-day forecast produced by the Transformer model (or fallback) for short-term local outlooks.
+- `SearchBar` — city lookup with autocomplete and quick navigation.
+- `Globe` — interactive 3D globe that flies to the selected city for spatial context.
+- `AnomalyChart` — per-year temperature anomaly bars (1950–2024 vs 1951–1980 baseline).
+- `AnomalyTrendChart` — trend lines and moving averages highlighting long-term warming.
+- `DecadeHeatmap` — seasonal/decadal heatmap view for monthly/seasonal patterns.
+- `HeatDaysChart` — extreme heat days per year with a 10-year moving average to show persistent changes.
+- `ForecastChart` — Chronos-backed climate outlook showing the projected 1.5°C crossing year and warming regime.
 
 Modeling choices
 ----------------
-- **Why a Transformer for 14-day forecasts:** Transformers are strong sequence models that use attention to capture long-range dependencies and non-linear interactions in time-series data. Compared with simple persistence or AR models, a Transformer can learn complex temporal patterns from multivariate inputs (seasonality, recent anomalies, local climatology), improving short-term forecast skill and producing coherent multi-day sequences.
+- **Why Chronos:** Chronos is a pretrained time-series foundation model that can forecast annual anomaly trajectories without training a city-specific transformer from scratch. That makes the output easier to maintain and more useful for climate horizons than the old 14-day weather model.
 
 Why the 5-year outlook
 ----------------------
