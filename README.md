@@ -1,120 +1,95 @@
 # The New Normal | Hackspire Hackathon 2026 Submission
 
-Description
------------------
-The New Normal is an interactive, city-focused climate evidence tool that turns raw historical weather data into simple, personal answers.
- Is your city hotter than it used to be? It uses the Open‑Meteo archive to compute year-by-year temperature anomalies against the 1951–1980 scientific baseline and visualizes the results with clear charts and a live 3D globe.
+## Description
+The New Normal is an interactive, city-focused climate evidence tool that turns raw historical weather data into clear, personal answers.
 
+It helps answer a simple question: **Is your city hotter than it used to be?**  
+The app uses the Open-Meteo archive to compute year-by-year temperature anomalies against the 1951-1980 baseline, then visualizes the results through charts, summaries, and a live 3D globe.
 
-Demo
------------
-
-
+## Demo
 https://github.com/user-attachments/assets/43f37a12-bd21-49af-a39d-5f7eb76908e4
 
+## Screenshots
+![1 - Start](docs/screenshots/1_start.png)
+![2 - Data](docs/screenshots/2_Data.png)
+![3 - Trend](docs/screenshots/3_trend.png)
+![4 - Heat map](docs/screenshots/4_heatmap.png)
+![5 - Summary](docs/screenshots/5_summary.png)
+![6 - Chronos AI climate outlook](docs/screenshots/6_chronos.png)
+![7 - Share card](docs/screenshots/7_card.png)
+![8 - Model detail](docs/screenshots/8_more_model.png)
+![9 - Model continuation](docs/screenshots/9_last_model.png)
+![10 - Call to action](docs/screenshots/10_call_to_action.png)
 
-Screenshots
------------
+## Problem Statement
+People need an accessible, personalized way to verify whether the extreme weather they are experiencing is statistically unusual.
 
+Climate datasets exist, but they are often scattered, technical, and difficult for non-experts to interpret. That creates a credibility gap and reduces engagement with local climate risk.
 
-![1 — Search / Starting page](docs/screenshots/1_search_aka_starting_page.png)
+The New Normal addresses this with one-click city lookup, scientifically grounded local metrics (anomalies, extreme heat, trend signals), and plain-language summaries.
 
-![2 — Results](docs/screenshots/2_results.png)
-
-![3 — Anomaly and extreme heat days](docs/screenshots/3_anomaly_and_extreme_heat_days.png)
-
-![4 — Warming trend](docs/screenshots/4_warming_trend.png)
-
-![5 — Heat map](docs/screenshots/5_heat_map.png)
-
-![6 — Chronos climate outlook](docs/screenshots/6_transformer_14%20day%20forecast.png)
-
-![7 — Chronos results](docs/screenshots/7_transformer_results.png)
-
-![8 — Five-year climate outlook](docs/screenshots/8_five_year%20climate_outlook.png)
-
-![9 — Call to action](docs/screenshots/9_call_to_action.png)
-
-Problem statement 
------------------------------------
-People lack an accessible, personalized tool to verify whether the extreme weather they are experiencing is statistically anomalous. Climate datasets are available, but they are scattered, technical, and difficult for non-experts to interpret. That creates a credibility gap and reduces public engagement with local climate impacts.
-
-The New Normal solves this by providing a one-click city lookup that produces scientifically grounded local metrics (annual anomalies, extreme days, trend projections) and plain-English summaries that anyone can understand and act upon.
-
-Core features
--------------
-- City search (Open‑Meteo geocoding) with autocomplete
+## Core Features
+- City search with autocomplete (Open-Meteo geocoding)
 - Interactive 3D globe that flies to the selected city
-- Temperature anomaly bar chart (1950–2024 vs 1951–1980 baseline)
-- Extreme heat days per year with a 10-year moving average
-- Auto-generated plain-English insight summary for each city
-- Chronos-powered climate outlook: 1.5°C crossing year and warming regime classification
+- Temperature anomaly charts (1950-2024 vs 1951-1980 baseline)
+- Extreme heat days with moving averages
+- Auto-generated plain-English city insight
+- Chronos AI-powered climate outlook with:
+  - 1.5C crossing signal
+  - warming regime classification
+  - uncertainty bands
+- Downloadable city share card
 
-Solution overview
------------------
-Design goals
-- Make scientific data personal and local
-- Avoid overwhelming users with jargon; emphasize clear visuals and a one-sentence takeaway
-- Use free public data sources so anyone can reproduce the results
+## Solution Overview
+### Design Goals
+- Make climate data personal and local
+- Keep explanations legible for non-experts
+- Use reproducible, free public data sources
 
-Data pipeline (brief)
-- Geocode city → lat/lon (Open‑Meteo Geocoding API)
-- Fetch daily max/min temperatures for 1950–2024 (Open‑Meteo Archive API)
-- Clean daily records, compute yearly averages and yearly max lists
-- Baseline (1951–1980) computed from the archive; anomaly = yearAvg − baselineAvg
-- 90th-percentile of baseline daily maxes used as the local extreme-day threshold
+### Data Pipeline (Brief)
+- Geocode city name to lat/lon via Open-Meteo Geocoding API
+- Fetch daily max/min temperatures for 1950-2024 via Open-Meteo Archive API
+- Clean daily records and aggregate yearly means/extreme-day counts
+- Compute baseline from 1951-1980
+- Compute yearly anomaly as `yearAvg - baselineAvg`
+- Use the baseline-period 90th percentile of daily max temps as the local extreme-heat threshold
 
-Architecture & tech
--------------------
-- Frontend: React + Vite (fast dev), Recharts for visualizations, react-globe.gl for globe
-- Styling: Tailwind + custom CSS (dark theme with high-contrast data accents)
-- Backend: Optional FastAPI scaffold exists in `/backend` (model-serving & experiments)
-- Data: Open‑Meteo (historical and geocoding)
+## Architecture & Tech
+- Frontend: React + Vite
+- Charts/visuals: Recharts, react-globe.gl
+- Styling: Tailwind + custom CSS
+- Backend: FastAPI service in `backend/` for inference endpoints
+- Data source: Open-Meteo (historical + geocoding)
+- Model: Amazon Chronos (`chronos-t5-small`) running on CPU
 
+Backend notes: the service warms Chronos on startup and serves `/api/climate/crossing`, `/api/climate/regime`, and `/api/climate/crossing/stream`.
 
-Notes: the backend warms a CPU Chronos pipeline at startup and exposes `/api/climate/crossing` plus `/api/climate/regime`. No saved model artifacts are required.
+## APIs Used
+- **Open-Meteo Geocoding API** for city lookup and coordinates
+- **Open-Meteo Archive API** for historical daily temperatures (1950-2024)
+- **Open-Meteo Forecast API** for optional contextual exploration
+- **Local model inference** (Chronos T5 small) for annual anomaly trajectory forecasting
 
-APIs, Visualizations, and Rationale
------------------------------------
+## Visualizations (Components)
+- `SearchBar`: city lookup + autocomplete
+- `Globe`: spatial context and camera fly-to
+- `AnomalyChart`: yearly anomaly visualization
+- `AnomalyTrendChart`: long-term warming trend views
+- `DecadeHeatmap`: decadal/seasonal pattern view
+- `HeatDaysChart`: annual extreme-heat days + moving average
+- `ForecastChart`: Chronos AI climate outlook and threshold interpretation
 
-APIs used
----------
-- **Open‑Meteo Geocoding API** — convert city names to latitude/longitude (autocomplete + lookup).
-- **Open‑Meteo Archive API** — historical daily temperature series used to compute baselines and yearly anomalies (1950–2024).
-- **Open‑Meteo Forecast API** — optional short-term observations/forecasts used for contextual climate exploration where applicable.
-- **Local model inference** — Chronos T5 small forecasts annual anomaly trajectories directly from the historical series.
+## Modeling Rationale
+- **Why Chronos:** It provides strong time-series forecasting performance without training a custom model per city.
+- **Why this outlook framing:** The goal is quick interpretation of whether local warming is already beyond, approaching, or likely to remain below the 1.5C threshold on the median trajectory.
+- **Why include a call to action:** Insight should lead to engagement. The CTA encourages users to share local findings and support practical climate action.
 
-Visualizations (components)
----------------------------
-- `SearchBar` — city lookup with autocomplete and quick navigation.
-- `Globe` — interactive 3D globe that flies to the selected city for spatial context.
-- `AnomalyChart` — per-year temperature anomaly bars (1950–2024 vs 1951–1980 baseline).
-- `AnomalyTrendChart` — trend lines and moving averages highlighting long-term warming.
-- `DecadeHeatmap` — seasonal/decadal heatmap view for monthly/seasonal patterns.
-- `HeatDaysChart` — extreme heat days per year with a 10-year moving average to show persistent changes.
-- `ForecastChart` — Chronos-backed climate outlook showing the projected 1.5°C crossing year and warming regime.
-
-Modeling choices
-----------------
-- **Why Chronos:** Chronos is a pretrained time-series foundation model that can forecast annual anomaly trajectories without training a city-specific transformer from scratch. That makes the output easier to maintain and more useful for climate horizons than the old 14-day weather model.
-
-Why the 5-year outlook
-----------------------
-- The 5-year outlook is a short-to-mid-term statistical projection (not a climate model projection). It smooths year-to-year noise and highlights the recent trajectory of local change, which is more actionable for users and planners than single-year fluctuations. It provides context for near-term adaptation and communication.
-
-Why include a Call to Action
-----------------------------
-- The call to action converts insight into engagement: it encourages users to share results, verify local observations, contribute data or feedback, and take practical steps (community outreach, policy contact, local preparedness). It bridges awareness with tangible next steps and helps the project have real-world impact.
-
-
-Team & credits
----------------
+## Team & Credits
 Contributors:
-- Tj Baja AKA tbajajUofA
+- Tj Bajaj (tbajajUofA)
 
-Data & license
---------------
-Data: Open‑Meteo Archive API (ERA5 reanalysis)
-License: MIT (this repo)
+## Data & License
+- Data: Open-Meteo Archive API (ERA5 reanalysis)
+- License: MIT
 
 
